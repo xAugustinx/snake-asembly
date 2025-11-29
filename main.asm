@@ -3,7 +3,7 @@
 
 .section .bss
     input: .space 1
-    plansza: .space 64
+    plansza: .space 71
     japki: .space 2
     wonszPlace: .space 128
     ##bools
@@ -13,17 +13,33 @@
     #Nieparzyste to X
     tymczasowaPozycjaWensza: .space 2
     
+
+
+.section .data
+consoleClear:
+        .ascii "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+enter:
+    .ascii "\n"
 .section .text
 _start:
-    ##PLANSZA NA ZERO
+    ##PLANSZA NA ZERO + granice
     MOV eax, 0
     lea rbx, [rip + plansza]
 
     planszaNaZero:
     MOV byte ptr [rbx + rax], 35
     ADD rax, 1
-    CMP rax, 64
+    CMP rax, 71
     JNE planszaNaZero
+    
+    MOV rax, 8
+
+    granicePlanszy:
+    MOV byte ptr [rbx + rax], 10
+    ADD rax, 9
+    CMP rax, 71
+    JNE granicePlanszy
+
 
     ##WONSZ NA ZERO
     MOV eax, 4
@@ -54,12 +70,38 @@ _start:
         jmp zmienianieKierunkuWensza
         koniecZmienianiaKierunkuWensza:
 
+        jmp wypisywanieZawartosciTablicy
+        koniecWypisywaniaZawartosciTablicy:
+
         CMP byte ptr [rip + czyKoniecGry],1
     JNE petlaGry
     
     mov rax, 60
     mov rdi, 60
     syscall
+
+
+wypisywanieZawartosciTablicy:
+    mov rax, 1
+    mov rdi, 1
+    lea rsi, [rip + consoleClear]
+    mov rdx, 20
+    syscall
+
+
+    mov rax, 1
+    mov rdi, 1
+    lea rsi, [rip + plansza]
+    mov rdx, 71
+    syscall
+
+    mov rax, 1
+    mov rdi, 1
+    lea rsi, enter
+    mov rdx, 1
+    syscall
+
+    jmp koniecWypisywaniaZawartosciTablicy
 
 zbieranieInputu:
     MOV rax, 0
@@ -68,6 +110,7 @@ zbieranieInputu:
     MOV rdx, 1
     syscall
     jmp koniecZbieraniaInputu
+
 
 zmienianieKierunkuWensza:
     MOV al, byte ptr [rip + wonszPlace]
@@ -89,8 +132,6 @@ zmienianieKierunkuWensza:
     JNE klawiszD
 
     kontynulujPoSprawdzeniuKlawisza:
-
-
 
     jmp koniecZmienianiaKierunkuWensza
 
