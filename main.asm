@@ -5,9 +5,10 @@
     wszystkieElementyWenza: .space 64
     kierunekWenza: .space 1
     plansza: .space 73
-    czyKoniec: .space 1
-    japko: .space 1
     input: .space 1
+    czyKoniec: .space 1
+    czyUsunoc: .space 1
+    japko: .space 1
 
 
     licznikTestowyMeow: .space 1
@@ -19,6 +20,9 @@ consoleClear:
 .section .text
 
 _start:
+    MOV byte ptr [rip + czyUsunoc], 1
+    MOV byte ptr [rip + japko], 69
+
     MOV byte ptr [rip + licznikTestowyMeow], 49
 
     ##USTAWIANIE WĘŻA NA ZERO
@@ -37,7 +41,7 @@ _start:
     MOV byte ptr [rip + wszystkieElementyWenza],29
     MOV byte ptr [rip + wszystkieElementyWenza+1],38
     MOV byte ptr [rip + wszystkieElementyWenza+2],47
-    MOV byte ptr [rip + wszystkieElementyWenza+3],56
+    #MOV byte ptr [rip + wszystkieElementyWenza+3],56
 
     mainPetla:
 
@@ -50,31 +54,48 @@ _start:
 
     jmp zbieranieInputu
     koniecZbieraniaInputu:
+    
+    CMP byte ptr [rip + czyUsunoc], 1
+
+    JE usuniecieOstatniegoElementu
+    koniecUsunieciaOstatniegoElementu:
+
+    MOV byte ptr [rip + czyUsunoc], 1
 
     jmp dodanieNowegoElementuDoWensza
     koniecDodaniaNowegoElementuDoWensza:
 
-    jmp usuniecieOstatniegoElementu
-    koniecUsunieciaOstatniegoElementu:
+    jmp czyGraSieKonczyLubCzyJapko
+    koniecCzyGraSieKonczy:
+
+    jmp sprawdzanieCzySciana
+    koniecSprawdzaniaCzySciana:
+    
 
     jmp mainPetla
 
     jmp koniec
 
 dodanieNowegoElementuDoWensza:
+    ##jmp koniecDodaniaNowegoElementuDoWensza
     MOV rax, 62
     LEA rbx, [rip + wszystkieElementyWenza]
     miejsceNaNowyElement:
-    MOV al, byte ptr [rbx + rax]
-    MOV byte ptr [rbx + rax +1], al
+
+    breakPointMeow:
+    MOV cl, byte ptr [rbx + rax]
+    MOV byte ptr [rbx + rax +1], cl
+
+    MOVZX rcx, byte ptr [rbx + rax +1]
 
     ADD rax, -1
     CMP rax, -1
     JNE miejsceNaNowyElement
 
+    MOV byte ptr [rbx + 63], 255
 
-    MOV al, byte ptr [rip + kierunekWenza]
-    ADD byte ptr [rip + wszystkieElementyWenza], al
+    MOV cl, byte ptr [rip + kierunekWenza]
+    ADD byte ptr [rip + wszystkieElementyWenza], cl
 
     
     jmp koniecDodaniaNowegoElementuDoWensza
@@ -100,6 +121,8 @@ usuniecieOstatniegoElementu:
 	syscall
 
     jmp koniecUsunieciaOstatniegoElementu
+
+
 wczytywanieZawartosciDoTablicy:
     #ustawianie planszy na Zero
     LEA rbx, [rip + plansza]
@@ -139,6 +162,12 @@ wczytywanieZawartosciDoTablicy:
     ADD rax, 1
     CMP byte ptr [rbx + rax], 255
     JNE ustawianieWenszaNaPlansze
+
+
+    MOVZX rax, byte ptr [rip + japko]
+
+    LEA rbx, [rip + plansza]
+    MOV byte ptr [rbx + rax], '.'
 
     jmp koniecWczytywaniaZawartosciDoTablicy
 wypisywanieZawartosciTablicy:
@@ -182,15 +211,8 @@ zbieranieInputu:
 
     kontynulujPoSprawdzeniuKlawisza:
 
-
-    mov rax, 1
-    mov rdi, 1
-    lea rsi, [rip + input+1]
-    mov rdx, 1
-    syscall
-
-
     jmp koniecZbieraniaInputu
+
 klawiszW:
     MOV byte ptr [rip + kierunekWenza], -9
     jmp kontynulujPoSprawdzeniuKlawisza
@@ -207,6 +229,70 @@ klawiszD:
     MOV byte ptr [rip + kierunekWenza], 1
     jmp kontynulujPoSprawdzeniuKlawisza
 
+
+czyGraSieKonczyLubCzyJapko:
+    MOV rax, 0
+    LEA rbx, [rip + wszystkieElementyWenza]
+    MOV cl, byte ptr [rip + wszystkieElementyWenza]
+    czyGraSieKonczyLoop:
+
+    MOV dl, byte ptr [rip + japko]
+
+    ADD rax, 1
+
+    CMP cl, byte ptr [rbx + rax]
+    JE koniec
+
+    CMP dl, byte ptr [rbx]
+    JE japkoZnalezione
+
+
+    CMP rax, 63
+    JNE czyGraSieKonczyLoop
+
+    jmp koniecCzyGraSieKonczy
+
+japkoZnalezione:
+    MOV byte ptr [rip + czyUsunoc], 0
+    MOV rax, 0
+    lea rbx, [rip + plansza]
+
+    noweMiejsceNaJapko:
+
+    CMP byte ptr [rbx + rax], '#'
+    JE ustawienieNowego
+
+    ADD rax, 1
+    CMP rax, 73
+    JNE noweMiejsceNaJapko
+
+    jmp koniecCzyGraSieKonczy
+
+ustawienieNowego:
+    MOV byte ptr [rip + japko], al
+    jmp koniecCzyGraSieKonczy
+    
+sprawdzanieCzySciana:
+    MOV al, 0
+    mainPetlaSprawdzaniaCzySciana:
+    
+    CMP al, byte ptr [rip + wszystkieElementyWenza]
+    JE koniec
+
+    ADD al, 9
+    CMP al, 72
+    JNE mainPetlaSprawdzaniaCzySciana
+
+    MOV al, byte ptr [rip + wszystkieElementyWenza]
+    MOV bl, -1
+
+    CMP bl, al
+    jg koniec
+
+    CMP al, 71
+    jg koniec
+
+    jmp koniecSprawdzaniaCzySciana
 koniec:
     MOV rax, 60
     MOV rdi, 60
