@@ -43,7 +43,6 @@ _start:
     MOV byte ptr [rip + wszystkieElementyWenza],29
     MOV byte ptr [rip + wszystkieElementyWenza+1],38
     MOV byte ptr [rip + wszystkieElementyWenza+2],47
-    #MOV byte ptr [rip + wszystkieElementyWenza+3],56
 
     mainPetla:
 
@@ -194,12 +193,7 @@ zbieranieInputu:
     LEA rsi, [rip + input]
     MOV rdx, 10
     syscall
-    
-    MOV al, byte ptr [rip + wszystkieElementyWenza]
-    MOV byte ptr [rip + kierunekWenza], al
-
-
-    ##  MOV byte ptr [rip + kierunekWenza], byte ptr [rip + wszystkieElementyWenza]
+     
 
     CMP byte ptr [rip + input], 119
     JE klawiszW
@@ -262,15 +256,16 @@ japkoZnalezione:
     MOVZX rax, byte ptr [rip + input]
     SHR rax, 1
     
+    #MOV bl, byte ptr [rip + input]
 
-    CMP byte ptr [rip + input], 111
-    JG jezeliSaProblemyWZnalezieniuTamToSzukanieOdZeraMeow
-
+    CMP byte ptr [rip + input], 's'
+    JE jezeliSaProblemyWZnalezieniuTamToSzukanieOdZeraMeow
 
     lea rbx, [rip + plansza]
-
-
     noweMiejsceNaJapko:
+
+
+
     CMP byte ptr [rbx + rax], '#'
     JE ustawienieNowego
 
@@ -284,6 +279,8 @@ japkoZnalezione:
 
 jezeliSaProblemyWZnalezieniuTamToSzukanieOdZeraMeow:
     ##do ustawienia rax dochodzi wcześniej w japkoZnalezione
+    MOV rax, 0
+
     MOV byte ptr [rip + czyUsunoc], 0
     lea rbx, [rip + plansza]
 
