@@ -10,6 +10,8 @@
     czyUsunoc: .space 1
     japko: .space 1
 
+    dodatkowaWartoscPseudoLosowa: .space 1
+
 
     licznikTestowyMeow: .space 1
 
@@ -185,15 +187,17 @@ wypisywanieZawartosciTablicy:
 
     jmp koniecWypisywaniaZawartosciTablicy
 
+
 zbieranieInputu:
     MOV rax, 0
     MOV rdi, 0
     LEA rsi, [rip + input]
-    MOV rdx, 2
+    MOV rdx, 10
     syscall
     
     MOV al, byte ptr [rip + wszystkieElementyWenza]
     MOV byte ptr [rip + kierunekWenza], al
+
 
     ##  MOV byte ptr [rip + kierunekWenza], byte ptr [rip + wszystkieElementyWenza]
 
@@ -254,11 +258,19 @@ czyGraSieKonczyLubCzyJapko:
 
 japkoZnalezione:
     MOV byte ptr [rip + czyUsunoc], 0
-    MOV rax, 0
+
+    MOVZX rax, byte ptr [rip + input]
+    SHR rax, 1
+    
+
+    CMP byte ptr [rip + input], 111
+    JG jezeliSaProblemyWZnalezieniuTamToSzukanieOdZeraMeow
+
+
     lea rbx, [rip + plansza]
 
-    noweMiejsceNaJapko:
 
+    noweMiejsceNaJapko:
     CMP byte ptr [rbx + rax], '#'
     JE ustawienieNowego
 
@@ -266,7 +278,24 @@ japkoZnalezione:
     CMP rax, 73
     JNE noweMiejsceNaJapko
 
-    jmp koniecCzyGraSieKonczy
+    MOV rax, 0
+    jmp jezeliSaProblemyWZnalezieniuTamToSzukanieOdZeraMeow
+
+
+jezeliSaProblemyWZnalezieniuTamToSzukanieOdZeraMeow:
+    ##do ustawienia rax dochodzi wcześniej w japkoZnalezione
+    MOV byte ptr [rip + czyUsunoc], 0
+    lea rbx, [rip + plansza]
+
+    noweMiejsceNaJapko2:
+    CMP byte ptr [rbx + rax], '#'
+    JE ustawienieNowego
+
+    ADD rax, 1
+    CMP rax, 73
+    JNE noweMiejsceNaJapko2
+
+    JMP koniec
 
 ustawienieNowego:
     MOV byte ptr [rip + japko], al
